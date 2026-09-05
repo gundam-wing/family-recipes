@@ -3,24 +3,81 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
+
+# One deploy at a time so concurrent PR/main runs cannot overwrite each other.
+concurrency:
+  group: pages-deployment
+  cancel-in-progress: false
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  pull-requests: write
 
 jobs:
   build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout
         uses: actions/checkout@v7
-      - name: Install, build, and upload your site
-        uses: withastro/action@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Build production site from main
+        env:
+          PATH_PREFIX: /family-recipes
+        run: |
+          git fetch --force origin main:refs/remotes/origin/main
+          git checkout --force origin/main
+          npm ci
+          npm run build
+          rm -rf _site
+          mkdir -p _site
+          cp -a dist/. _site/
+
+      - name: Build open PR previews
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATH_PREFIX_ROOT: /family-recipes/preview
+        run: |
+          set -euo pipefail
+          mapfile -t prs < <(gh api "repos/${{ github.repository }}/pulls" --paginate --jq '.[].number')
+          if [[ ${#prs[@]} -eq 0 ]]; then
+            echo "No open pull requests; skipping preview builds."
+            exit 0
+          fi
+
+          for pr in "${prs[@]}"; do
+            echo "::group::Preview for PR #${pr}"
+            git fetch --force origin "pull/${pr}/head:refs/heads/pr-${pr}"
+            git checkout --force "pr-${pr}"
+            npm ci
+            PATH_PREFIX="${PATH_PREFIX_ROOT}/${pr}" npm run build
+            rm -rf "_site/preview/${pr}"
+            mkdir -p "_site/preview/${pr}"
+            cp -a dist/. "_site/preview/${pr}/"
+            echo "::endgroup::"
+          done
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -29,3 +86,23 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  comment:
+    needs: deploy
+    if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment preview URL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.number }}
+          PREVIEW_URL: https://gundam-wing.github.io/family-recipes/preview/${{ github.event.number }}/
+        run: |
+          marker="<!-- preview-deploy-bot -->"
+          body="$(printf '%s\n### Preview deployment\n\n%s\n\n%s\n' "$marker" "$PREVIEW_URL" "_Rebuilt on each push. Removed automatically when this PR is closed._")"
+          existing="$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" --paginate --jq ".[] | select(.body | contains(\"${marker}\")) | .id" | head -n1)"
+          if [[ -n "$existing" ]]; then
+            gh api "repos/${{ github.repository }}/issues/comments/${existing}" -X PATCH -f body="$body" >/dev/null
+          else
+            gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "$body"
+          fi

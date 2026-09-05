@@ -16,13 +16,27 @@ npm run build
 npm run preview
 ```
 
+To mimic a PR preview build locally:
+
+```sh
+PATH_PREFIX=/family-recipes/preview/123 npm run build
+npm run preview
+```
+
 ## Deployment
 
-Pushing to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) and publishes to GitHub Pages with the official Astro action.
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publishes to GitHub Pages on pushes to `main` and on pull request updates.
 
-In the GitHub repository, set **Settings → Pages → Source** to **GitHub Actions**. After the first successful run the site will be at:
+Each run builds the **canonical site** from `main` and every **open PR preview** into one artifact, then deploys that tree atomically. That way a preview cannot wipe production or another preview.
 
-https://gundam-wing.github.io/family-recipes/
+| Surface | URL |
+| --- | --- |
+| Production | https://gundam-wing.github.io/family-recipes/ |
+| PR preview | https://gundam-wing.github.io/family-recipes/preview/`<pr-number>`/ |
+
+Closed PRs drop out of the open-PR list on the next deploy, so their `/preview/<n>/` paths go away automatically. The workflow also posts (and updates) a preview link comment on each PR.
+
+In the GitHub repository, set **Settings → Pages → Source** to **GitHub Actions**.
 
 ## Adding recipes
 

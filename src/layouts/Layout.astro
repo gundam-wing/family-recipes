@@ -8,6 +8,7 @@ interface Props {
 
 const { title, description = 'Handwritten family recipes, preserved as images and transcribed for reading and search.' } = Astro.props;
 const home = homeHref(import.meta.env.BASE_URL);
+const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 ---
 
 <!doctype html>
@@ -19,6 +20,7 @@ const home = homeHref(import.meta.env.BASE_URL);
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		{isPreview && <meta name="robots" content="noindex, nofollow" />}
 		<title>{title}</title>
 	</head>
 	<body>
