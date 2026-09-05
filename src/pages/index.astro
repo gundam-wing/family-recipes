@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { categoryLabel, imageHref, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
+import { categoryLabel, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
 
 const recipes = loadRecipes();
 const categories = listCategories(recipes);
@@ -12,7 +12,6 @@ const index = recipes.map((recipe) => ({
 	category: recipe.category,
 	label: categoryLabel(recipe.category, recipe.subcategory),
 	pages: recipe.pages.length,
-	thumb: imageHref(base, recipe.pages[0].file),
 	search: [recipe.title, recipe.category, recipe.subcategory ?? '', recipe.text].join(' ').toLowerCase(),
 }));
 ---
@@ -28,13 +27,13 @@ const index = recipes.map((recipe) => ({
 		<form method="get" role="search">
 			<p>
 				<label>
-					Search
+					Search{' '}
 					<input type="search" name="q" value="" autocomplete="off" />
 				</label>
 			</p>
 			<p>
 				<label>
-					Category
+					Category{' '}
 					<select name="category">
 						<option value="">All</option>
 						{categories.map((category) => <option value={category}>{category}</option>)}
@@ -55,10 +54,8 @@ const index = recipes.map((recipe) => ({
 						data-category={recipe.category}
 						data-search={recipe.search}
 					>
-						<a href={recipe.href}>
-							<img src={recipe.thumb} alt="" width="240" />
-							{recipe.title}
-						</a>
+						<a href={recipe.href}>{recipe.title}</a>
+						{' '}
 						— {recipe.label}
 						{recipe.pages > 1 ? ` · ${recipe.pages} pages` : ''}
 					</li>
