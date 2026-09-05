@@ -25,16 +25,16 @@ npm run preview
 
 ## Deployment
 
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publishes to GitHub Pages on pushes to `main` and on pull request updates.
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publishes to GitHub Pages from `main` (required by the `github-pages` environment branch policy).
 
-Each run builds the **canonical site** from `main` and every **open PR preview** into one artifact, then deploys that tree atomically. That way a preview cannot wipe production or another preview.
+Pull request opens/syncs/closes run [`.github/workflows/preview-trigger.yml`](.github/workflows/preview-trigger.yml), which dispatches that same deploy on `main`. Each run builds the **canonical site** from `main` and every **open PR preview** into one artifact, then deploys atomically — so a preview cannot wipe production or another preview.
 
 | Surface | URL |
 | --- | --- |
 | Production | https://gundam-wing.github.io/family-recipes/ |
 | PR preview | https://gundam-wing.github.io/family-recipes/preview/`<pr-number>`/ |
 
-Closed PRs drop out of the open-PR list on the next deploy, so their `/preview/<n>/` paths go away automatically. The workflow also posts (and updates) a preview link comment on each PR.
+Closed PRs drop out of the open-PR list on the next deploy, so their `/preview/<n>/` paths go away automatically. Successful preview rebuilds post (and update) a link comment on the PR.
 
 In the GitHub repository, set **Settings → Pages → Source** to **GitHub Actions**.
 
