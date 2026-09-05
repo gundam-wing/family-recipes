@@ -1,0 +1,42 @@
+name: Trigger preview rebuild
+
+# The github-pages environment only allows deploys from main, so PR events
+# dispatch the main deploy workflow instead of deploying from the PR ref.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: preview-trigger
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Pages deploy on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.number }}
+          ACTION: ${{ github.event.action }}
+        run: |
+          set -euo pipefail
+          # Prefer filename so renaming the workflow display name does not break dispatch.
+          if [[ "$ACTION" == "closed" ]]; then
+            gh workflow run deploy.yml --repo "${{ github.repository }}" --ref main
+            exit 0
+          fi
+
+          if gh workflow run deploy.yml --repo "${{ github.repository }}" --ref main \
+            -f "comment_pr=${PR_NUMBER}"; then
+            exit 0
+          fi
+
+          # Before this workflow lands on main, comment_pr is not a known input.
+          echo "Dispatch with comment_pr failed; retrying without inputs."
+          gh workflow run deploy.yml --repo "${{ github.repository }}" --ref main
