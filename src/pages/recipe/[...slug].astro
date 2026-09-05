@@ -1,0 +1,59 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import {
+	categoryLabel,
+	homeHref,
+	imageHref,
+	loadRecipes,
+	type Recipe,
+} from '../../lib/recipes';
+
+export function getStaticPaths() {
+	return loadRecipes().map((recipe) => ({
+		params: { slug: recipe.id },
+		props: { recipe },
+	}));
+}
+
+interface Props {
+	recipe: Recipe;
+}
+
+const { recipe } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const label = categoryLabel(recipe.category, recipe.subcategory);
+---
+
+<Layout title={`${recipe.title} · Family Recipes`} description={`${recipe.title} — ${label}`}>
+	<main>
+		<p><a href={homeHref(base)}>All recipes</a></p>
+		<article>
+			<h1>{recipe.title}</h1>
+			<p>{label}{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}</p>
+
+			{
+				recipe.text && (
+					<section>
+						<h2>Transcript</h2>
+						<pre>{recipe.text}</pre>
+					</section>
+				)
+			}
+
+			<section>
+				<h2>{recipe.pages.length > 1 ? 'Original cards' : 'Original card'}</h2>
+				{
+					recipe.pages.map((page) => (
+						<figure>
+							<img
+								src={imageHref(base, page.file)}
+								alt={`${recipe.title}${recipe.pages.length > 1 ? `, page ${page.page}` : ''}`}
+							/>
+							{recipe.pages.length > 1 && <figcaption>Page {page.page}</figcaption>}
+						</figure>
+					))
+				}
+			</section>
+		</article>
+	</main>
+</Layout>

@@ -1,0 +1,103 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { categoryLabel, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
+
+const recipes = loadRecipes();
+const categories = listCategories(recipes);
+const base = import.meta.env.BASE_URL;
+const index = recipes.map((recipe) => ({
+	id: recipe.id,
+	href: recipeHref(base, recipe.id),
+	title: recipe.title,
+	category: recipe.category,
+	label: categoryLabel(recipe.category, recipe.subcategory),
+	pages: recipe.pages.length,
+	search: [recipe.title, recipe.category, recipe.subcategory ?? '', recipe.text].join(' ').toLowerCase(),
+}));
+---
+
+<Layout title="Family Recipes">
+	<main>
+		<h1>Family Recipes</h1>
+		<p>
+			{recipes.length} handwritten cards, kept as they were written and transcribed so you can
+			search the words on the page.
+		</p>
+
+		<form method="get" role="search">
+			<p>
+				<label>
+					Search{' '}
+					<input type="search" name="q" value="" autocomplete="off" />
+				</label>
+			</p>
+			<p>
+				<label>
+					Category{' '}
+					<select name="category">
+						<option value="">All</option>
+						{categories.map((category) => <option value={category}>{category}</option>)}
+					</select>
+				</label>
+			</p>
+			<p>
+				<button type="submit">Filter</button>
+			</p>
+		</form>
+
+		<p id="status">{recipes.length} recipes</p>
+
+		<ul id="recipes">
+			{
+				index.map((recipe) => (
+					<li
+						data-category={recipe.category}
+						data-search={recipe.search}
+					>
+						<a href={recipe.href}>{recipe.title}</a>
+						{' '}
+						— {recipe.label}
+						{recipe.pages > 1 ? ` · ${recipe.pages} pages` : ''}
+					</li>
+				))
+			}
+		</ul>
+	</main>
+</Layout>
+
+<script>
+	const form = document.querySelector('form');
+	const query = document.querySelector('input[name="q"]');
+	const category = document.querySelector('select[name="category"]');
+	const status = document.querySelector('#status');
+	const items = [...document.querySelectorAll('#recipes li')];
+
+	function applyFilters() {
+		if (!(query instanceof HTMLInputElement) || !(category instanceof HTMLSelectElement)) return;
+
+		const q = query.value.trim().toLowerCase();
+		const selected = category.value;
+		let visible = 0;
+
+		for (const item of items) {
+			if (!(item instanceof HTMLElement)) continue;
+			const haystack = item.dataset.search ?? '';
+			const matchesQuery = !q || haystack.includes(q);
+			const matchesCategory = !selected || item.dataset.category === selected;
+			const show = matchesQuery && matchesCategory;
+			item.hidden = !show;
+			if (show) visible += 1;
+		}
+
+		if (status) {
+			status.textContent = `${visible} recipe${visible === 1 ? '' : 's'}`;
+		}
+	}
+
+	form?.addEventListener('submit', (event) => {
+		event.preventDefault();
+		applyFilters();
+	});
+	query?.addEventListener('input', applyFilters);
+	category?.addEventListener('change', applyFilters);
+</script>
