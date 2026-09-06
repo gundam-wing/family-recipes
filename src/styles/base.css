@@ -139,7 +139,7 @@
 	}
 
 	.page {
-		padding-block: var(--space-xl) var(--space-3xl);
+		padding-block: 0 var(--space-3xl);
 	}
 
 	.stack {

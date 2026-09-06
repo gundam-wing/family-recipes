@@ -32,9 +32,9 @@ const label = categoryLabel(recipe.category, recipe.subcategory);
 		</p>
 
 		<article class="stack-lg">
-			<header class="recipe-hero">
-				{
-					recipe.featuredImage && (
+			{
+				recipe.featuredImage ? (
+					<header class="recipe-hero">
 						<div class="recipe-hero-media">
 							<img
 								src={featuredHref(base, recipe.featuredImage)}
@@ -44,16 +44,25 @@ const label = categoryLabel(recipe.category, recipe.subcategory);
 								fetchpriority="high"
 							/>
 						</div>
-					)
-				}
-				<div class="stack">
-					<p class="recipe-kicker">
-						{label}
-						{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}
-					</p>
-					<h1 class="recipe-heading">{recipe.title}</h1>
-				</div>
-			</header>
+						<div class="recipe-hero-veil" aria-hidden="true"></div>
+						<div class="stack">
+							<p class="recipe-kicker">
+								{label}
+								{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}
+							</p>
+							<h1 class="recipe-heading">{recipe.title}</h1>
+						</div>
+					</header>
+				) : (
+					<header class="recipe-hero-plain">
+						<p class="recipe-kicker recipe-kicker-ink">
+							{label}
+							{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}
+						</p>
+						<h1 class="recipe-heading">{recipe.title}</h1>
+					</header>
+				)
+			}
 
 			{
 				recipe.text && (
