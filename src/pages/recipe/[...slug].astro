@@ -59,23 +59,56 @@ const ogImage = recipe.featuredImage
 				)
 			}
 
-			<section>
+			<section class="original-cards">
 				<h2>{recipe.pages.length > 1 ? 'Original cards' : 'Original card'}</h2>
 				{
-					recipe.pages.map((page) => (
-						<figure>
-							<img
-								src={imageHref(base, page.file)}
-								alt={`${recipe.title}${recipe.pages.length > 1 ? `, page ${page.page}` : ''}`}
-							/>
-							{recipe.pages.length > 1 && <figcaption>Page {page.page}</figcaption>}
-						</figure>
-					))
+					recipe.pages.map((page) => {
+						const alt = `${recipe.title}${recipe.pages.length > 1 ? `, page ${page.page}` : ''}`;
+						return (
+							<figure>
+								<button type="button" class="card-zoom" aria-haspopup="dialog">
+									<img src={imageHref(base, page.file)} alt={alt} />
+								</button>
+								{recipe.pages.length > 1 && <figcaption>Page {page.page}</figcaption>}
+							</figure>
+						);
+					})
 				}
 			</section>
 		</article>
 	</main>
+
+	<dialog class="card-dialog">
+		<form method="dialog">
+			<button type="submit" class="card-dialog-close" aria-label="Close">
+				Close
+			</button>
+		</form>
+		<img src="" alt="" />
+	</dialog>
 </Layout>
+
+<script>
+	const dialog = document.querySelector('.card-dialog');
+	const dialogImage = dialog?.querySelector('img');
+
+	if (dialog instanceof HTMLDialogElement && dialogImage instanceof HTMLImageElement) {
+		for (const button of document.querySelectorAll('.card-zoom')) {
+			if (!(button instanceof HTMLButtonElement)) continue;
+			button.addEventListener('click', () => {
+				const img = button.querySelector('img');
+				if (!(img instanceof HTMLImageElement)) return;
+				dialogImage.src = img.currentSrc || img.src;
+				dialogImage.alt = img.alt;
+				dialog.showModal();
+			});
+		}
+
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+	}
+</script>
 
 <style>
 	.featured {
@@ -87,5 +120,50 @@ const ogImage = recipe.featuredImage
 		width: 100%;
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
+	}
+
+	.card-zoom {
+		display: block;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: zoom-in;
+		width: 100%;
+	}
+
+	.card-zoom img {
+		display: block;
+		width: 100%;
+	}
+
+	.card-dialog {
+		padding: 0;
+		border: 0;
+		max-width: min(96vw, 56rem);
+		max-height: 96vh;
+		background: transparent;
+	}
+
+	.card-dialog::backdrop {
+		background: rgb(0 0 0 / 0.7);
+	}
+
+	.card-dialog img {
+		display: block;
+		max-width: 96vw;
+		max-height: 90vh;
+		width: auto;
+		height: auto;
+		margin: 0 auto;
+		background: #fff;
+	}
+
+	.card-dialog-close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 1;
+		font: inherit;
+		cursor: pointer;
 	}
 </style>
