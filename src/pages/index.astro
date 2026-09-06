@@ -1,10 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { categoryLabel, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
+import { categoryLabel, featuredHref, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
 
 const recipes = loadRecipes();
 const categories = listCategories(recipes);
 const base = import.meta.env.BASE_URL;
+const heroRecipe = recipes.find((recipe) => recipe.featuredImage) ?? recipes[0];
 const index = recipes.map((recipe) => ({
 	id: recipe.id,
 	href: recipeHref(base, recipe.id),
@@ -17,48 +18,64 @@ const index = recipes.map((recipe) => ({
 ---
 
 <Layout title="Family Recipes">
-	<main>
-		<h1>Family Recipes</h1>
-		<p>
-			{recipes.length} handwritten cards, kept as they were written and transcribed so you can
-			search the words on the page.
-		</p>
-
-		<form method="get" role="search">
-			<p>
-				<label>
-					Search{' '}
-					<input type="search" name="q" value="" autocomplete="off" />
-				</label>
-			</p>
-			<p>
-				<label>
-					Category{' '}
-					<select name="category">
-						<option value="">All</option>
-						{categories.map((category) => <option value={category}>{category}</option>)}
-					</select>
-				</label>
-			</p>
-		</form>
-
-		<p id="status">{recipes.length} recipes</p>
-
-		<ul id="recipes">
+	<main class="page">
+		<section class="hero" aria-labelledby="hero-brand">
 			{
-				index.map((recipe) => (
-					<li
-						data-category={recipe.category}
-						data-search={recipe.search}
-					>
-						<a href={recipe.href}>{recipe.title}</a>
-						{' '}
-						— {recipe.label}
-						{recipe.pages > 1 ? ` · ${recipe.pages} pages` : ''}
-					</li>
-				))
+				heroRecipe?.featuredImage && (
+					<div class="hero-media">
+						<img
+							src={featuredHref(base, heroRecipe.featuredImage)}
+							alt=""
+							width="1600"
+							height="1200"
+							fetchpriority="high"
+						/>
+					</div>
+				)
 			}
-		</ul>
+			<div class="hero-veil" aria-hidden="true"></div>
+			<h1 id="hero-brand" class="hero-brand">Family Recipes</h1>
+			<p class="hero-lede">
+				{recipes.length} handwritten cards — kept as they were written, transcribed so you can
+				search the words on the page.
+			</p>
+		</section>
+
+		<div class="shell">
+			<form class="filters" method="get" role="search">
+				<div class="filters-inner">
+					<div class="field">
+						<label for="q">Search</label>
+						<input class="control" id="q" type="search" name="q" value="" autocomplete="off" placeholder="Tomato, stew, grandma…" />
+					</div>
+					<div class="field">
+						<label for="category">Category</label>
+						<select class="control" id="category" name="category">
+							<option value="">All</option>
+							{categories.map((category) => <option value={category}>{category}</option>)}
+						</select>
+					</div>
+				</div>
+			</form>
+
+			<div class="status" id="status" aria-live="polite">{recipes.length} recipes</div>
+
+			<ul class="recipe-list" id="recipes" role="list">
+				{
+					index.map((recipe) => (
+						<li data-category={recipe.category} data-search={recipe.search}>
+							<a class="recipe-item" href={recipe.href}>
+								<span class="recipe-title">{recipe.title}</span>
+								<span class="recipe-meta">
+									{recipe.label}
+									{recipe.pages > 1 ? ` · ${recipe.pages} pages` : ''}
+								</span>
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</div>
 	</main>
 </Layout>
 
