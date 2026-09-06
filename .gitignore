@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# OG mockup renders (regenerate with node scripts/og-mockups/generate.mjs)
+scripts/og-mockups/out/
