@@ -32,6 +32,10 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 </html>
 
 <style is:global>
+	:root {
+		--img-placeholder: #e8e8e8;
+	}
+
 	body {
 		max-width: 48rem;
 		margin: 1rem auto;
@@ -41,7 +45,7 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 	img {
 		max-width: 100%;
 		height: auto;
-		background-color: #e8e8e8;
+		background-color: var(--img-placeholder);
 	}
 
 	pre {
