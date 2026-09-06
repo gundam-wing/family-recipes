@@ -1,60 +1,81 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { categoryLabel, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
+import { categoryLabel, featuredHref, listCategories, loadRecipes, recipeHref } from '../lib/recipes';
 
 const recipes = loadRecipes();
 const categories = listCategories(recipes);
 const base = import.meta.env.BASE_URL;
-const index = recipes.map((recipe) => ({
+const heroRecipe = recipes.find((recipe) => recipe.featuredImage) ?? recipes[0];
+const index = recipes.map((recipe, i) => ({
 	id: recipe.id,
 	href: recipeHref(base, recipe.id),
 	title: recipe.title,
 	category: recipe.category,
 	label: categoryLabel(recipe.category, recipe.subcategory),
 	pages: recipe.pages.length,
+	n: String(i + 1).padStart(2, '0'),
 	search: [recipe.title, recipe.category, recipe.subcategory ?? '', recipe.text].join(' ').toLowerCase(),
 }));
 ---
 
 <Layout title="Family Recipes">
-	<main>
-		<h1>Family Recipes</h1>
-		<p>
-			{recipes.length} handwritten cards, kept as they were written and transcribed so you can
-			search the words on the page.
-		</p>
+	<main class="page shell">
+		<section class="hero" aria-labelledby="hero-brand">
+			{
+				heroRecipe?.featuredImage && (
+					<div class="hero-media">
+						<img
+							src={featuredHref(base, heroRecipe.featuredImage)}
+							alt=""
+							width="1600"
+							height="900"
+							fetchpriority="high"
+						/>
+					</div>
+				)
+			}
+			<div class="hero-copy">
+				<p class="hero-meta">{recipes.length} cards</p>
+				<h1 id="hero-brand" class="hero-brand">Family Recipes</h1>
+				<p class="hero-lede">
+					Handwritten cards kept as they were written, transcribed so you can search the words on
+					the page.
+				</p>
+			</div>
+		</section>
 
-		<form method="get" role="search">
-			<p>
-				<label>
-					Search{' '}
-					<input type="search" name="q" value="" autocomplete="off" />
-				</label>
-			</p>
-			<p>
-				<label>
-					Category{' '}
-					<select name="category">
-						<option value="">All</option>
-						{categories.map((category) => <option value={category}>{category}</option>)}
-					</select>
-				</label>
-			</p>
+		<form class="filters" method="get" role="search">
+			<div class="field">
+				<label for="q">Search</label>
+				<input class="control" id="q" type="search" name="q" value="" autocomplete="off" placeholder="Ingredient or title" />
+			</div>
+			<div class="field">
+				<label for="category">Category</label>
+				<select class="control" id="category" name="category">
+					<option value="">All</option>
+					{categories.map((category) => <option value={category}>{category}</option>)}
+				</select>
+			</div>
 		</form>
 
-		<p id="status">{recipes.length} recipes</p>
+		<div class="status-bar">
+			<span id="status">{recipes.length} recipes</span>
+		</div>
 
-		<ul id="recipes">
+		<ul class="recipe-list" id="recipes" role="list">
 			{
 				index.map((recipe) => (
-					<li
-						data-category={recipe.category}
-						data-search={recipe.search}
-					>
-						<a href={recipe.href}>{recipe.title}</a>
-						{' '}
-						— {recipe.label}
-						{recipe.pages > 1 ? ` · ${recipe.pages} pages` : ''}
+					<li data-category={recipe.category} data-search={recipe.search}>
+						<a class="recipe-item" href={recipe.href}>
+							<span class="recipe-index" aria-hidden="true">{recipe.n}</span>
+							<span class="recipe-body">
+								<span class="recipe-title">{recipe.title}</span>
+								<span class="recipe-meta">
+									{recipe.label}
+									{recipe.pages > 1 ? ` · ${recipe.pages} pages` : ''}
+								</span>
+							</span>
+						</a>
 					</li>
 				))
 			}
