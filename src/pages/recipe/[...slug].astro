@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import {
 	categoryLabel,
+	featuredHref,
 	homeHref,
 	imageHref,
 	loadRecipes,
@@ -28,6 +29,16 @@ const label = categoryLabel(recipe.category, recipe.subcategory);
 	<main>
 		<p><a href={homeHref(base)}>All recipes</a></p>
 		<article>
+			{
+				recipe.featuredImage && (
+					<figure class="featured">
+						<img
+							src={featuredHref(base, recipe.featuredImage)}
+							alt={`Prepared ${recipe.title}`}
+						/>
+					</figure>
+				)
+			}
 			<h1>{recipe.title}</h1>
 			<p>{label}{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}</p>
 
@@ -57,3 +68,16 @@ const label = categoryLabel(recipe.category, recipe.subcategory);
 		</article>
 	</main>
 </Layout>
+
+<style>
+	.featured {
+		margin: 0 0 1rem;
+	}
+
+	.featured img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+	}
+</style>

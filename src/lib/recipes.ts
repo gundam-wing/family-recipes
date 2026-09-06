@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import transcriptions from '../data/transcriptions.json';
 
@@ -17,6 +17,7 @@ export interface Recipe {
 	subcategory: string | null;
 	pages: RecipePage[];
 	text: string;
+	featuredImage: string | null;
 }
 
 interface Transcription {
@@ -51,6 +52,24 @@ function recipeId(category: string, subcategory: string | null, slug: string): s
 	return subcategory ? `${category}/${subcategory}/${slug}` : `${category}/${slug}`;
 }
 
+const FEATURED_EXT = ['.png', '.jpg', '.jpeg', '.webp'];
+
+function featuredImageFor(id: string): string | null {
+	const root = join(process.cwd(), 'public', 'featured');
+	for (const ext of FEATURED_EXT) {
+		const rel = `${id}${ext}`;
+		if (existsSync(join(root, rel))) {
+			return `featured/${rel}`;
+		}
+	}
+	return null;
+}
+
+export function featuredHref(base: string, featuredImage: string): string {
+	const prefix = base.endsWith('/') ? base : `${base}/`;
+	return `${prefix}${featuredImage.split('/').map(encodeURIComponent).join('/')}`;
+}
+
 export function loadRecipes(): Recipe[] {
 	const root = join(process.cwd(), 'recipes');
 	const byId = new Map<string, Recipe>();
@@ -78,6 +97,7 @@ export function loadRecipes(): Recipe[] {
 			subcategory,
 			pages: [],
 			text: '',
+			featuredImage: featuredImageFor(id),
 		};
 
 		recipe.pages.push({
