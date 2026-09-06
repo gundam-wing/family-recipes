@@ -23,9 +23,17 @@ interface Props {
 const { recipe } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const label = categoryLabel(recipe.category, recipe.subcategory);
+const ogImage = recipe.featuredImage
+	? new URL(featuredHref(base, recipe.featuredImage), Astro.site).href
+	: null;
 ---
 
-<Layout title={`${recipe.title} · Family Recipes`} description={`${recipe.title} — ${label}`}>
+<Layout
+	title={`${recipe.title} · Family Recipes`}
+	description={`${recipe.title} — ${label}`}
+	image={ogImage}
+	ogType="article"
+>
 	<main>
 		<p><a href={homeHref(base)}>All recipes</a></p>
 		<article>
