@@ -1,5 +1,8 @@
 ---
 import { homeHref } from '../lib/recipes';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/components.css';
 
 interface Props {
 	title: string;
@@ -17,44 +20,23 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href={`${home}favicon.svg`} />
 		<link rel="icon" href={`${home}favicon.ico`} />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		<meta name="theme-color" content="#2a1810" />
 		{isPreview && <meta name="robots" content="noindex, nofollow" />}
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..700;1,400..700&family=Fraunces:opsz,wght@9..144,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
 		<title>{title}</title>
 	</head>
 	<body>
-		<header>
-			<p><a href={home}>Family Recipes</a></p>
+		<header class="site-header">
+			<a class="site-brand" href={home}>Family Recipes</a>
 		</header>
 		<slot />
 	</body>
 </html>
-
-<style is:global>
-	:root {
-		--img-placeholder: #e8e8e8;
-	}
-
-	body {
-		max-width: 48rem;
-		margin: 1rem auto;
-		padding: 0 1rem 3rem;
-	}
-
-	img {
-		max-width: 100%;
-		height: auto;
-		background-color: var(--img-placeholder);
-	}
-
-	pre {
-		white-space: pre-wrap;
-	}
-
-	input,
-	select,
-	textarea {
-		font-size: 16px;
-	}
-</style>
