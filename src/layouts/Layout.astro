@@ -104,6 +104,8 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 		--bg: #f4f4f1;
 		--fg: #1c1c1a;
 		--img-placeholder: #e8e8e8;
+		--control-bg: #e8e8e4;
+		--control-border: #f4f4f1;
 	}
 
 	html[data-theme='dark'] {
@@ -111,6 +113,8 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 		--bg: #1c1c1a;
 		--fg: #f4f4f1;
 		--img-placeholder: #2c2c2a;
+		--control-bg: #4a4a46;
+		--control-border: #6e6e68;
 	}
 
 	html {
@@ -164,7 +168,11 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 
 	input,
 	select,
-	textarea {
+	textarea,
+	button {
 		font-size: 16px;
+		color: inherit;
+		background-color: var(--control-bg);
+		border: 1px solid var(--control-border);
 	}
 </style>
