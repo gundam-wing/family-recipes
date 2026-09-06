@@ -36,6 +36,24 @@ function titleFromSlug(slug: string): string {
 		.join(' ');
 }
 
+/** Capital Case: first letter of each whitespace-/hyphen-/slash-separated word uppercased. */
+export function toCapitalCase(title: string): string {
+	return title
+		.replace(/\s+/g, ' ')
+		.trim()
+		.replace(/[^\s]+/g, (word) =>
+			word
+				.split(/([-/])/)
+				.map((part) => {
+					if (part === '-' || part === '/' || !part) return part;
+					return part.replace(/^([^\p{L}]*)(\p{L})(.*)$/u, (_, prefix: string, first: string, rest: string) =>
+						prefix + first.toLocaleUpperCase('en-US') + rest.toLocaleLowerCase('en-US'),
+					);
+				})
+				.join(''),
+		);
+}
+
 function collectImages(dir: string, files: string[] = []): string[] {
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
 		const full = join(dir, entry.name);
@@ -116,7 +134,7 @@ export function loadRecipes(): Recipe[] {
 		recipe.pages.sort((a, b) => a.page - b.page || a.file.localeCompare(b.file));
 		const titled = recipe.pages.find((p) => p.title);
 		if (titled?.title) {
-			recipe.title = titled.title.replace(/\s+/g, ' ').trim();
+			recipe.title = toCapitalCase(titled.title);
 		}
 		recipe.text = recipe.pages
 			.map((p) => p.text.trim())
