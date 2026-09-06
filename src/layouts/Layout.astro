@@ -170,10 +170,21 @@ const isPreview = import.meta.env.BASE_URL.includes('/preview/');
 	select,
 	textarea,
 	button {
-		appearance: auto;
 		font-size: 16px;
 		color: inherit;
 		background-color: var(--control-bg);
 		border-color: var(--control-border);
+	}
+
+	/* iOS drops its 5px UA radius once a control is author-colored. */
+	@supports (-webkit-touch-callout: none) {
+		@media (pointer: coarse) {
+			input,
+			select,
+			textarea,
+			button {
+				border-radius: 5px;
+			}
+		}
 	}
 </style>
