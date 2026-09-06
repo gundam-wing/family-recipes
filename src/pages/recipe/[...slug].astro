@@ -26,58 +26,70 @@ const label = categoryLabel(recipe.category, recipe.subcategory);
 ---
 
 <Layout title={`${recipe.title} · Family Recipes`} description={`${recipe.title} — ${label}`}>
-	<main>
-		<p><a href={homeHref(base)}>All recipes</a></p>
-		<article>
+	<main class="page shell stack-lg">
+		<p>
+			<a class="back-link" href={homeHref(base)}>All recipes</a>
+		</p>
+
+		<article class="stack-lg">
 			{
-				recipe.featuredImage && (
-					<figure class="featured">
-						<img
-							src={featuredHref(base, recipe.featuredImage)}
-							alt={`Prepared ${recipe.title}`}
-						/>
-					</figure>
+				recipe.featuredImage ? (
+					<header class="recipe-hero">
+						<div class="recipe-hero-media">
+							<img
+								src={featuredHref(base, recipe.featuredImage)}
+								alt={`Prepared ${recipe.title}`}
+								width="1600"
+								height="900"
+								fetchpriority="high"
+							/>
+						</div>
+						<div class="recipe-hero-veil" aria-hidden="true"></div>
+						<div class="stack">
+							<p class="recipe-kicker">
+								{label}
+								{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}
+							</p>
+							<h1 class="recipe-heading">{recipe.title}</h1>
+						</div>
+					</header>
+				) : (
+					<header class="recipe-hero-plain">
+						<p class="recipe-kicker recipe-kicker-ink">
+							{label}
+							{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}
+						</p>
+						<h1 class="recipe-heading">{recipe.title}</h1>
+					</header>
 				)
 			}
-			<h1>{recipe.title}</h1>
-			<p>{label}{recipe.pages.length > 1 ? ` · ${recipe.pages.length} pages` : ''}</p>
 
 			{
 				recipe.text && (
-					<section>
+					<section class="section">
 						<h2>Transcript</h2>
 						<pre>{recipe.text}</pre>
 					</section>
 				)
 			}
 
-			<section>
+			<section class="section">
 				<h2>{recipe.pages.length > 1 ? 'Original cards' : 'Original card'}</h2>
-				{
-					recipe.pages.map((page) => (
-						<figure>
-							<img
-								src={imageHref(base, page.file)}
-								alt={`${recipe.title}${recipe.pages.length > 1 ? `, page ${page.page}` : ''}`}
-							/>
-							{recipe.pages.length > 1 && <figcaption>Page {page.page}</figcaption>}
-						</figure>
-					))
-				}
+				<div class="card-gallery">
+					{
+						recipe.pages.map((page) => (
+							<figure class="scan-figure">
+								<img
+									src={imageHref(base, page.file)}
+									alt={`${recipe.title}${recipe.pages.length > 1 ? `, page ${page.page}` : ''}`}
+									loading="lazy"
+								/>
+								{recipe.pages.length > 1 && <figcaption>Page {page.page}</figcaption>}
+							</figure>
+						))
+					}
+				</div>
 			</section>
 		</article>
 	</main>
 </Layout>
-
-<style>
-	.featured {
-		margin: 0 0 1rem;
-	}
-
-	.featured img {
-		display: block;
-		width: 100%;
-		aspect-ratio: 4 / 3;
-		object-fit: cover;
-	}
-</style>
