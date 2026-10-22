@@ -16,14 +16,18 @@ concurrency:
   group: pages-deployment
   cancel-in-progress: false
 
+# Default token is read-only. A job-level permissions block replaces this
+# entirely, so each job below lists only the scopes it uses.
+# build runs npm lifecycle scripts from checked-out commits and must not be
+# able to deploy Pages, mint an OIDC token, or comment on pull requests.
 permissions:
   contents: read
-  pages: write
-  id-token: write
-  pull-requests: write
 
 jobs:
   build:
+    permissions:
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,13 +59,23 @@ jobs:
           PATH_PREFIX_ROOT: /family-recipes/preview
         run: |
           set -euo pipefail
-          mapfile -t prs < <(gh api "repos/${{ github.repository }}/pulls" --paginate --jq '.[].number')
-          if [[ ${#prs[@]} -eq 0 ]]; then
-            echo "No open pull requests; skipping preview builds."
-            exit 0
-          fi
+          # Fork pull requests are untrusted: npm ci / npm run build would
+          # execute their scripts. Only heads in this repository are built.
+          filter='.[] | [(if .head.repo.full_name == "gundam-wing/family-recipes" then "build" else "skip" end), (.number | tostring), (.head.repo.full_name // "")] | @tsv'
+          rows="$(gh api "repos/${{ github.repository }}/pulls" --paginate --jq "$filter")"
 
-          for pr in "${prs[@]}"; do
+          built=0
+          while IFS=$'\t' read -r action pr head_repo; do
+            [[ -z "${action:-}" ]] && continue
+            if [[ "$action" != "build" ]]; then
+              echo "Skipping PR #${pr} from '${head_repo:-unknown}' (head repo is not gundam-wing/family-recipes)."
+              continue
+            fi
+            if [[ ! "$pr" =~ ^[0-9]+$ ]]; then
+              echo "Refusing to build unexpected pull request id: ${pr}"
+              exit 1
+            fi
+            built=1
             echo "::group::Preview for PR #${pr}"
             git fetch --force origin "pull/${pr}/head:refs/heads/pr-${pr}"
             git checkout --force "pr-${pr}"
@@ -71,7 +85,11 @@ jobs:
             mkdir -p "_site/preview/${pr}"
             cp -a dist/. "_site/preview/${pr}/"
             echo "::endgroup::"
-          done
+          done <<< "$rows"
+
+          if [[ "$built" -eq 0 ]]; then
+            echo "No open pull requests from gundam-wing/family-recipes; skipping preview builds."
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
@@ -79,6 +97,9 @@ jobs:
           path: _site
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -90,6 +111,8 @@ jobs:
         uses: actions/deploy-pages@v5
 
   comment:
+    permissions:
+      pull-requests: write
     needs: deploy
     if: github.event_name == 'workflow_dispatch' && inputs.comment_pr != ''
     runs-on: ubuntu-latest

@@ -27,7 +27,7 @@ npm run preview
 
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publishes to GitHub Pages from `main` (required by the `github-pages` environment branch policy).
 
-Pull request opens/syncs/closes run [`.github/workflows/preview-trigger.yml`](.github/workflows/preview-trigger.yml), which dispatches that same deploy on `main`. Each run builds the **canonical site** from `main` and every **open PR preview** into one artifact, then deploys atomically — so a preview cannot wipe production or another preview.
+Pull request opens/syncs/closes run [`.github/workflows/preview-trigger.yml`](.github/workflows/preview-trigger.yml), which dispatches that same deploy on `main`. Each run builds the **canonical site** from `main` and an **open PR preview** for every pull request whose head repository is `gundam-wing/family-recipes` into one artifact, then deploys atomically — so a preview cannot wipe production or another preview. Pull requests from forks are not built.
 
 | Surface | URL |
 | --- | --- |
